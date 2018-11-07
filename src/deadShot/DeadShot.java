@@ -1,4 +1,6 @@
-package geneticBot;
+package deadShot;
+import java.util.HashMap;
+
 import robocode.*;
 //import java.awt.Color;
 
@@ -7,12 +9,20 @@ import robocode.*;
 /**
  * Test - a robot by (your name here)
  */
-public class GeneticBot extends Robot {
-	/**
-	 * run: Test's default behavior
-	 */
+public class DeadShot extends Robot {
+	
+	String target;
+	
+	
 	public void run() {
+		this.target = null;
+		
 		// Initialization of the robot should be put here
+		
+		//Allow robot's base, gun, and radar to rotate independently
+		setAdjustGunForRobotTurn(true);
+		setAdjustRadarForGunTurn(true);
+		
 
 		// After trying out your robot, try uncommenting the import at the top,
 		// and the next line:
@@ -21,6 +31,15 @@ public class GeneticBot extends Robot {
 
 		// Robot main loop
 		while(true) {
+			
+			if (target == null) {
+				turnRadarRight(360);
+			} else {
+				
+			}
+			//Radar turns clockwise
+//			turnRadarRight(Double.POSITIVE_INFINITY);
+			
 			// Replace the next 4 lines with any behavior you would like
 			ahead(100);
 			turnGunRight(360);
@@ -33,6 +52,15 @@ public class GeneticBot extends Robot {
 	 * onScannedRobot: What to do when you see another robot
 	 */
 	public void onScannedRobot(ScannedRobotEvent e) {
+		String name = e.getName();
+		
+		if (this.target == null) {
+			this.target = name;
+		}
+		
+		
+		double power = getOthers();
+				
 		// Replace the next line with any behavior you would like
 		fire(1);
 	}
