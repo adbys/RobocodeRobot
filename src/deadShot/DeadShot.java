@@ -7,9 +7,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 
+import static robocode.util.Utils.normalRelativeAngleDegrees;
+
 import deadShot.helpers.*;
 
-public class DeadShot extends Robot {
+public class DeadShot extends AdvancedRobot {
 	
 	//local do nosso robo
 	Point2D.Double myLoc;
@@ -53,11 +55,6 @@ public class DeadShot extends Robot {
 				}
 			}
 			
-			if(target != null) {
-				double radarAngle = robocode.util.Utils.normalRelativeAngleDegrees(Math.toDegrees(calcAngle(myLoc, target.loc)) - getRadarHeading());
-				turnGunRight(radarAngle);
-				fire(1);
-			}
 		}
 	}
 	
@@ -66,8 +63,6 @@ public class DeadShot extends Robot {
 		String name = event.getName();
 		Enemy enemy;
 		
-		
-		//vamos colocar todos os inimigos
 		if(enemies.get(name) == null) {
 			enemy = new Enemy(name, calcPoint(myLoc, Math.toRadians(getHeading() + event.getBearing()), event.getDistance()), event.getEnergy(), event.getBearing(), event.getHeading(), new Vector<BulletWave>());
 		} else {
@@ -75,19 +70,37 @@ public class DeadShot extends Robot {
 		}
 		enemies.put(name, enemy);
 		
-		//provavelmente onde vamos setar o target para o inimigo de menor life
-		if(target == null) {
-			target = getSmallerEnergy();
-			System.out.println("menor alvo no momento");
-			System.out.println(target.name);
+		// calcula o ponto certo do outro robo
+		double absoluteBearing = getHeading() + event.getBearing();
+		double bearingFromGun = normalRelativeAngleDegrees(absoluteBearing - getGunHeading());
+
+		// caso esteja muito perto
+		if (Math.abs(bearingFromGun) <= 3) {
+			turnGunRight(bearingFromGun);
+			//calculo do fire
+			if (getGunHeat() == 0) {
+				fire(Math.min(3 - Math.abs(bearingFromGun), getEnergy() - .1));
+			}
+		} 
+		//se não está perto
+		else {
+			turnGunRight(bearingFromGun);
+		}
+		if (bearingFromGun == 0) {
+			scan();
 		}
 		
-		
+	}
+	
+	@Override
+	public void scan() {
+		turnRadarRight(360);
+		target = getSmallerEnergy();
 	}
 	
 	//provavel função para calcular o que tem menor life
 	public Enemy getSmallerEnergy() {
-		double menor =  Double.POSITIVE_INFINITY;
+		double menor =  Double.NEGATIVE_INFINITY;
 		
 		Enemy returnEnemy = null;
 		Iterator<Enemy> it = enemies.values().iterator();
@@ -95,11 +108,12 @@ public class DeadShot extends Robot {
 		while(it.hasNext()) {
 			Enemy enemy = it.next();
 			
-			if(enemy.energy < menor) {
+			if(enemy.energy > menor) {
 				returnEnemy = enemy;
 			}
 		}
 		
+		System.out.println(returnEnemy.name);
 		return returnEnemy;
 	}
 	
@@ -112,23 +126,21 @@ public class DeadShot extends Robot {
 		}
 	}
 	
-	// Função que calcula o risco de se mover para um determinado ponto
 		public double calcRisk(Point2D point) {
 			double risk = 0;
 			Iterator<Enemy> it = enemies.values().iterator();
-		// Uses antigravity to repel from enemies; also accounts for high-energy enemies being a greater risk
 			while(it.hasNext()) {
 				Enemy enemy = it.next();
 				risk += (enemy.energy + 50) / point.distanceSq(enemy.loc);
 			}
-		// Repels from last and current locations to prevent staying too close to a single spot
+		
 			risk += 0.1 / point.distanceSq(prevLoc);
 			risk += 0.1 / point.distanceSq(myLoc);
 			
 			return risk;
 		}
 		
-		// Function calculates a point at a given angle to and distance from an origin point:
+		
 		public Point2D.Double calcPoint(Point2D origin, double angle, double distance) {
 			return new Point2D.Double(origin.getX() + distance * Math.sin(angle), origin.getY() + distance * Math.cos(angle));
 		}
