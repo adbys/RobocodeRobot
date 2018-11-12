@@ -16,7 +16,7 @@ import robocode.util.Utils;
 /**
  * Test - a robot by (your name here)
  */
-public class DeadShot extends Robot {
+public class DeadShot extends AdvancedRobot {
 	
 	Inimigo alvo;
 	HashMap<String, Inimigo> inimigos;
@@ -116,13 +116,17 @@ public class DeadShot extends Robot {
 					this.calcularPonto(Math.toRadians(getHeading() + e.getBearing()), e.getDistance()),
 					e.getEnergy(),
 					e.getBearing(),
-					e.getHeading());
+					e.getHeading(),
+					e.getVelocity(),
+					getHeadingRadians());
 		} else {
 			inimigo = new Inimigo(nome,
 					this.calcularPonto(Math.toRadians(getHeading() + e.getBearing()), e.getDistance()),
 					e.getEnergy(),
 					e.getBearing(),
-					e.getHeading());
+					e.getHeading(),
+					e.getVelocity(),
+					e.getHeadingRadians());
 			
 		}
 		
@@ -132,41 +136,37 @@ public class DeadShot extends Robot {
 			this.alvo = inimigo;
 		}
 		
-		double firePower = Math.min(500 / this.posicaoAtual.distance(inimigo.getLocalizacao()), 3);
-		double bulletSpeed = 20 - firePower * 3;
-		long time = (long)(this.posicaoAtual.distance(inimigo.getLocalizacao()) / bulletSpeed);
+		double poderBala = Math.min(500 / this.posicaoAtual.distance(inimigo.getLocalizacao()), 3);
+		double absoluteBearing = getHeadingRadians() + e.getBearingRadians();
+		 
+		double deltaTime = 0;
+		double battleFieldHeight = getBattleFieldHeight(), 
+		       battleFieldWidth = getBattleFieldWidth();
+		double predictedX = inimigo.getLocalizacao().getX();
+		double predictedY = inimigo.getLocalizacao().getY();
 		
-		double absoluteBearing = Math.toRadians(getHeading() + inimigo.getBearing());
-		System.out.println("velocidade: " + e.getVelocity());
-		System.out.println("bearing: " + absoluteBearing);
-		if(e.getVelocity() != 0) {
-			System.out.println("velocidade" + e.getVelocity());
-			if(Math.sin(Math.toRadians(inimigo.getDirecao()) - absoluteBearing) * e.getVelocity() < 0) {
-				this.direcao = -1;
-			} else {
-				this.direcao = 1;
+		while((++deltaTime) * (20.0 - 3.0 * poderBala) < 
+		      Point2D.Double.distance(getX(), getY(), predictedX, predictedY)){		
+			predictedX += Math.sin(inimigo.getDirecaoRad()) * inimigo.getVelocidade();	
+			predictedY += Math.cos(inimigo.getDirecaoRad()) * inimigo.getVelocidade();
+			if(	predictedX < 18.0 
+				|| predictedY < 18.0
+				|| predictedX > battleFieldWidth - 18.0
+				|| predictedY > battleFieldHeight - 18.0){
+				predictedX = Math.min(Math.max(18.0, predictedX), 
+		                    battleFieldWidth - 18.0);	
+				predictedY = Math.min(Math.max(18.0, predictedY), 
+		                    battleFieldHeight - 18.0);
+				break;
 			}
-			double inimigoX = getX() + e.getDistance() * Math.sin(absoluteBearing);
-			double inimigoY = getY() + e.getDistance() * Math.cos(absoluteBearing);
-			
-			double predicaoX = inimigoX + Math.sin(e.getHeading()) * e.getVelocity();	
-			double predicaoY = inimigoY + Math.cos(e.getHeading()) * e.getVelocity();
-			
-			System.out.println(predicaoX);
-			System.out.println(predicaoY);
-			
-			double theta = Math.toDegrees(Utils.normalAbsoluteAngle(Math.atan2(predicaoX - getX(), predicaoY - getY())));
-			turnGunRight(theta - getGunHeading());
-			fire(firePower);
-			
-		} else {			
-			double anguloRadar = robocode.util.Utils.normalRelativeAngleDegrees(Math.toDegrees(
-					this.calcularAngulo(this.posicaoAtual, this.alvo.getLocalizacao())) - getGunHeading()
-					);
-			turnGunRight(anguloRadar);					
-			fire(3);
 		}
-		
+		double theta = Utils.normalAbsoluteAngle(Math.atan2(
+		    predictedX - getX(), predictedY - getY()));
+		 
+		setTurnRadarRightRadians(
+		    Utils.normalRelativeAngle(absoluteBearing - getRadarHeadingRadians()));
+		setTurnGunRightRadians(Utils.normalRelativeAngle(theta - getGunHeadingRadians()));
+		fire(poderBala);
 				
 	}
 
