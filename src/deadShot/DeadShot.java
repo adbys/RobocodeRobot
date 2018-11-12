@@ -36,7 +36,7 @@ public class DeadShot extends AdvancedRobot {
 		this.direcao = 1;
 		this.hits = 0;
 		Rectangle2D campoBatalha = new Rectangle2D.Double(50, 50, getBattleFieldWidth() - 100, getBattleFieldHeight() - 100);
-		//Allow robot's base, gun, and radar to rotate independently
+		//radar e arma giram de forma independente
 		setAdjustGunForRobotTurn(true);
 		setAdjustRadarForGunTurn(true);
 		
@@ -74,13 +74,13 @@ public class DeadShot extends AdvancedRobot {
 						
 					}
 				} else {
-					// Attempts to remain perpendicular in 1v1:
+					// Continuar em uma rota perpendicular batalha 1v1 :
 					double d = (Math.random() * 100) + 150;
-				// Changes perpendicular direction of movement to enemy if a valid point (at least absolute enemy bearing +- 60deg) does not exist in the current direction OR pseudo-randomly, hindering enemy targeting algorithms. Randomness largely based on the number of enemy hits landed, striking a balance between excellent head-on targeting avoidance and a reasonable level of true randomness to deter more advanced targeting algorithms.
+					// Changes perpendicular direction of movement to enemy if a valid point (at least absolute enemy bearing +- 60deg) does not exist in the current direction OR pseudo-randomly, hindering enemy targeting algorithms. Randomness largely based on the number of enemy hits landed, striking a balance between excellent head-on targeting avoidance and a reasonable level of true randomness to deter more advanced targeting algorithms.
 					if(!campoBatalha.contains(this.calcularPonto(this.calcularAngulo(this.posicaoAtual, alvo.getLocalizacao()) + Math.PI / 3 * perpendicularDirection, d)) || ((Math.random() * (hits % 5) > 0.6))) {
 						perpendicularDirection = -perpendicularDirection;
 					}
-				// If possible, will select an angle perpendicular to enemy, else finds nearest valid angle
+					//seleciona um angulo perpendicular ao inimigo ou o angulo valido mais proximo
 					double angulo = this.calcularAngulo(this.posicaoAtual, this.alvo.getLocalizacao()) + (Math.PI / 2) * perpendicularDirection;
 					while(!campoBatalha.contains(this.calcularPonto(angulo, d))) {
 						angulo -= perpendicularDirection * 0.1;
@@ -92,7 +92,7 @@ public class DeadShot extends AdvancedRobot {
 					double moveAngle = robocode.util.Utils.normalRelativeAngleDegrees(Math.toDegrees(this.calcularAngulo(this.posicaoAtual, this.proximaPosicao)) - getHeading());
 					this.posicaoAnterior = this.posicaoAtual;
 					
-				// Calculate values for smallest turn and movement to reach point
+					//Calcular menor valor para giro e movimento para chegar no ponto
 					if(Math.abs(moveAngle) > 90) {
 						moveAngle = robocode.util.Utils.normalRelativeAngleDegrees(moveAngle + 180);
 						distance = -distance;
@@ -134,6 +134,16 @@ public class DeadShot extends AdvancedRobot {
 		
 		if (this.alvo == null || this.alvo.getNome().equals(nome)) {
 			this.alvo = inimigo;
+		} else {
+			Inimigo menorLife = inimigo;
+			
+			for (String chave : this.inimigos.keySet()) {
+				if (this.inimigos.get(chave).getEnergia() < inimigo.getEnergia()) {
+					menorLife = this.inimigos.get(chave);
+				}
+			}
+			
+			this.alvo = menorLife;
 		}
 		
 		double poderBala = Math.min(500 / this.posicaoAtual.distance(inimigo.getLocalizacao()), 3);
