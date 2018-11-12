@@ -6,22 +6,61 @@ import java.util.Vector;
 
 public class Inimigo {
 	
-	public String nome;
-	public Point2D.Double localizacao;
-	public double energia;
-	public double bearing;
-	public double direcao;
-	public Vector<OndaTiros> tiros;
+	private String nome;
+	private Point2D.Double localizacao;
+	private double energia;
+	private double bearing;
+	private double direcao;
 	
-	public Inimigo(String nome, Double localizacao, double energia, double bearing, double direcao,
-			Vector<OndaTiros> tiros) {
+	public Inimigo(String nome, Double localizacao, double energia, double bearing, double direcao) {
 		super();
 		this.nome = nome;
 		this.localizacao = localizacao;
 		this.energia = energia;
 		this.bearing = bearing;
 		this.direcao = direcao;
-		this.tiros = tiros;
+
 	}
+
+	public String getNome() {
+		return nome;
+	}
+
+	public void setNome(String nome) {
+		this.nome = nome;
+	}
+
+	public Point2D.Double getLocalizacao() {
+		return localizacao;
+	}
+
+	public void setLocalizacao(Point2D.Double localizacao) {
+		this.localizacao = localizacao;
+	}
+
+	public double getEnergia() {
+		return energia;
+	}
+
+	public void setEnergia(double energia) {
+		this.energia = energia;
+	}
+
+	public double getBearing() {
+		return bearing;
+	}
+
+	public void setBearing(double bearing) {
+		this.bearing = bearing;
+	}
+
+	public double getDirecao() {
+		return direcao;
+	}
+
+	public void setDirecao(double direcao) {
+		this.direcao = direcao;
+	}
+	
 
 }
