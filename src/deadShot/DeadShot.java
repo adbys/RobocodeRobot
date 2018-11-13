@@ -181,7 +181,8 @@ public class DeadShot extends AdvancedRobot {
 		setTurnRadarRightRadians(
 		    Utils.normalRelativeAngle(absoluteBearing - getRadarHeadingRadians()));
 		setTurnGunRightRadians(Utils.normalRelativeAngle(teta - getGunHeadingRadians()));
-		fire(poderBala);
+		if (getGunHeat() == 0 && Math.abs(getGunTurnRemaining()) < 10)
+			fire(poderBala);
 				
 	}
 
