@@ -29,7 +29,7 @@ public class DeadShot extends AdvancedRobot {
 	int hits;
 	
 	public void run() {
-	
+		
 		this.alvo = null;
 		this.inimigos = new HashMap<String, Inimigo>();
 		this.proximaPosicao = null;
@@ -67,12 +67,18 @@ public class DeadShot extends AdvancedRobot {
 						double d = (Math.random() * 100) + 100;
 						
 						Point2D.Double p = this.calcularPonto(Math.toRadians(Math.random() * 360), d);
-						
+						System.out.println("risco de todas as posições");
+						System.out.println(calcularRisco(p));
 						if(campoBatalha.contains(p) && (this.calcularRisco(p) < this.calcularRisco(this.proximaPosicao))) {
 							this.proximaPosicao = p;
 						}
 						
 					}
+					System.out.println("essa é a posição com menor risco:");
+					System.out.println(this.proximaPosicao);
+					System.out.println("esse é o menor risco:");
+					System.out.println(calcularRisco(this.proximaPosicao));
+					
 				} else {
 					// Continuar em uma rota perpendicular batalha 1v1 :
 					double d = (Math.random() * 100) + 150;
@@ -108,6 +114,8 @@ public class DeadShot extends AdvancedRobot {
 	 * onScannedRobot: What to do when you see another robot
 	 */
 	public void onScannedRobot(ScannedRobotEvent e) {
+		
+		System.out.println(e.getName());
 		String nome = e.getName();
 		Inimigo inimigo;
 		
