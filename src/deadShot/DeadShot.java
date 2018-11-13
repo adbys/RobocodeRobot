@@ -1,10 +1,8 @@
 package deadShot;
 import java.awt.geom.Point2D;
-import java.awt.geom.Point2D.Double;
 import java.awt.geom.Rectangle2D;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Vector;
 
 import resources.Inimigo;
 import robocode.*;
@@ -24,8 +22,7 @@ public class DeadShot extends AdvancedRobot {
 	Point2D.Double posicaoAnterior;
 	Point2D.Double proximaPosicao;
 	int direcao;
-	static HashMap<String,int[][][][]> estatisticas = new HashMap<String,int[][][][]>();	// HashMap stores segmented guessfactor information for enemies, static to persist through rounds.
-	double perpendicularDirection = 1;
+	double direcaoPerpendicular = 1;
 	int hits;
 	
 	public void run() {
@@ -82,18 +79,18 @@ public class DeadShot extends AdvancedRobot {
 				} else {
 					// Continuar em uma rota perpendicular batalha 1v1 :
 					double d = (Math.random() * 100) + 150;
-					// Changes perpendicular direction of movement to enemy if a valid point (at least absolute enemy bearing +- 60deg) does not exist in the current direction OR pseudo-randomly, hindering enemy targeting algorithms. Randomness largely based on the number of enemy hits landed, striking a balance between excellent head-on targeting avoidance and a reasonable level of true randomness to deter more advanced targeting algorithms.
-					if(!campoBatalha.contains(this.calcularPonto(this.calcularAngulo(this.posicaoAtual, alvo.getLocalizacao()) + Math.PI / 3 * perpendicularDirection, d)) || ((Math.random() * (hits % 5) > 0.6))) {
-						perpendicularDirection = -perpendicularDirection;
+					//Adicionar aleatoriedade no movimento para tentar evitar algoritmos de mira mais sofisticados
+					if(!campoBatalha.contains(this.calcularPonto(this.calcularAngulo(this.posicaoAtual, alvo.getLocalizacao()) + Math.PI / 3 * direcaoPerpendicular, d)) || ((Math.random() * (hits % 5) > 0.6))) {
+						direcaoPerpendicular = -direcaoPerpendicular;
 					}
 					//seleciona um angulo perpendicular ao inimigo ou o angulo valido mais proximo
-					double angulo = this.calcularAngulo(this.posicaoAtual, this.alvo.getLocalizacao()) + (Math.PI / 2) * perpendicularDirection;
+					double angulo = this.calcularAngulo(this.posicaoAtual, this.alvo.getLocalizacao()) + (Math.PI / 2) * direcaoPerpendicular;
 					while(!campoBatalha.contains(this.calcularPonto(angulo, d))) {
-						angulo -= perpendicularDirection * 0.1;
+						angulo -= direcaoPerpendicular * 0.1;
 					}
 					this.proximaPosicao = this.calcularPonto(angulo, d);
 					
-					// Calculate absolute distance and angle to point; update prevLoc
+					//Calcula a distancia e angulo para mirar
 					double distance = this.posicaoAtual.distance(this.proximaPosicao);
 					double moveAngle = robocode.util.Utils.normalRelativeAngleDegrees(Math.toDegrees(this.calcularAngulo(this.posicaoAtual, this.proximaPosicao)) - getHeading());
 					this.posicaoAnterior = this.posicaoAtual;
@@ -157,33 +154,33 @@ public class DeadShot extends AdvancedRobot {
 		double poderBala = Math.min(500 / this.posicaoAtual.distance(inimigo.getLocalizacao()), 3);
 		double absoluteBearing = getHeadingRadians() + e.getBearingRadians();
 		 
-		double deltaTime = 0;
-		double battleFieldHeight = getBattleFieldHeight(), 
-		       battleFieldWidth = getBattleFieldWidth();
-		double predictedX = inimigo.getLocalizacao().getX();
-		double predictedY = inimigo.getLocalizacao().getY();
+		double delta = 0;
+		double campoBatalhaAltura = getBattleFieldHeight(), 
+		       campoBatalhaComprimento = getBattleFieldWidth();
+		double predicaoX = inimigo.getLocalizacao().getX();
+		double predicaoY = inimigo.getLocalizacao().getY();
 		
-		while((++deltaTime) * (20.0 - 3.0 * poderBala) < 
-		      Point2D.Double.distance(getX(), getY(), predictedX, predictedY)){		
-			predictedX += Math.sin(inimigo.getDirecaoRad()) * inimigo.getVelocidade();	
-			predictedY += Math.cos(inimigo.getDirecaoRad()) * inimigo.getVelocidade();
-			if(	predictedX < 18.0 
-				|| predictedY < 18.0
-				|| predictedX > battleFieldWidth - 18.0
-				|| predictedY > battleFieldHeight - 18.0){
-				predictedX = Math.min(Math.max(18.0, predictedX), 
-		                    battleFieldWidth - 18.0);	
-				predictedY = Math.min(Math.max(18.0, predictedY), 
-		                    battleFieldHeight - 18.0);
+		while((++delta) * (20.0 - 3.0 * poderBala) < 
+		      Point2D.Double.distance(getX(), getY(), predicaoX, predicaoY)){		
+			predicaoX += Math.sin(inimigo.getDirecaoRad()) * inimigo.getVelocidade();	
+			predicaoY += Math.cos(inimigo.getDirecaoRad()) * inimigo.getVelocidade();
+			if(	predicaoX < 18.0 
+				|| predicaoY < 18.0
+				|| predicaoX > campoBatalhaComprimento - 18.0
+				|| predicaoY > campoBatalhaAltura - 18.0){
+				predicaoX = Math.min(Math.max(18.0, predicaoX), 
+		                    campoBatalhaComprimento - 18.0);	
+				predicaoY = Math.min(Math.max(18.0, predicaoY), 
+		                    campoBatalhaAltura - 18.0);
 				break;
 			}
 		}
-		double theta = Utils.normalAbsoluteAngle(Math.atan2(
-		    predictedX - getX(), predictedY - getY()));
+		double teta = Utils.normalAbsoluteAngle(Math.atan2(
+		    predicaoX - getX(), predicaoY - getY()));
 		 
 		setTurnRadarRightRadians(
 		    Utils.normalRelativeAngle(absoluteBearing - getRadarHeadingRadians()));
-		setTurnGunRightRadians(Utils.normalRelativeAngle(theta - getGunHeadingRadians()));
+		setTurnGunRightRadians(Utils.normalRelativeAngle(teta - getGunHeadingRadians()));
 		fire(poderBala);
 				
 	}
@@ -212,12 +209,12 @@ public class DeadShot extends AdvancedRobot {
 	public double calcularRisco(Point2D ponto) {
 		double risco = 0;
 		Iterator<Inimigo> it = this.inimigos.values().iterator();
-	// Uses antigravity to repel from enemies; also accounts for high-energy enemies being a greater risk
+		//Utiliza algoritmo antigravidade, inimigos com maior energia sao um risco maior
 		while(it.hasNext()) {
 			Inimigo inimigo = it.next();
 			risco += (inimigo.getEnergia() + 50) / ponto.distanceSq(inimigo.getLocalizacao());
 		}
-	// Repels from last and current locations to prevent staying too close to a single spot
+		//Foge das ultima localizacoes
 		risco += 0.1 / ponto.distanceSq(this.posicaoAnterior);
 		risco += 0.1 / ponto.distanceSq(this.posicaoAtual);
 		
